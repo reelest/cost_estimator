@@ -1,55 +1,77 @@
-import 'dart:developer';
-
 import 'package:intro_slider/intro_slider.dart';
 import 'package:flutter/material.dart';
 
 class IntroScreenDefaultState extends State<IntroScreen> {
   List<ContentConfig> listContentConfig = [];
-
   @override
   void initState() {
     super.initState();
+    const TextStyle headerStyles = TextStyle(
+        color: Colors.black87, fontSize: 30, fontWeight: FontWeight.bold);
+    const TextStyle descriptionStyles = TextStyle(
+        color: Colors.black45, fontSize: 18, fontWeight: FontWeight.normal);
 
     listContentConfig.add(
       const ContentConfig(
-        title: "ERASER",
+        title: "GET BUILDING COSTS",
+        styleTitle: headerStyles,
+        textOverFlowTitle: null,
+        styleDescription: descriptionStyles,
         description:
-            "Allow miles wound place the leave had. To sitting subject no improve studied limited",
-        pathImage: "../../../assets/images/images.png",
-        backgroundColor: Color(0xfff5a623),
+            "Get accurate estimation of the resources needed to complete your project",
+        pathImage: "assets/images/budget_and_finance.jpg",
+        foregroundImageFit: BoxFit.cover,
+        backgroundColor: Color(0xFFFFFFFF),
       ),
     );
     listContentConfig.add(
       const ContentConfig(
-        title: "PENCIL",
-        description:
-            "Ye indulgence unreserved connection alteration appearance",
-        pathImage: "assets/images/house3.png",
-        backgroundColor: Color(0xff203152),
+        title: "MAKE YOUR PLANS WITH INSIGHTS",
+        styleTitle: headerStyles,
+        styleDescription: descriptionStyles,
+        description: "Use insights gained to plan correctly and reduce costs",
+        pathImage: "assets/images/save_money_piggy.jpg",
+        backgroundColor: Color(0xFFFFFFFF),
       ),
     );
     listContentConfig.add(
       const ContentConfig(
-        title: "RULER",
-        description:
-            "Much evil soon high in hope do view. Out may few northward believing attempted. Yet timed being songs marry one defer men our. Although finished blessing do of",
-        pathImage: "../assets/images/insight.png",
-        backgroundColor: Color(0xff9932CC),
+        title: "SPEED UP THE BUILDING PROCESS",
+        styleTitle: headerStyles,
+        styleDescription: descriptionStyles,
+        description: "Spend less time designing and begin work faster",
+        pathImage: "assets/images/work_icon.jpg",
+        backgroundColor: Color(0xFFFFFFFF),
       ),
     );
   }
 
   _onDonePress() {
-    log("End of slides");
+    Navigator.of(context).pushNamed('/home');
   }
 
   @override
   Widget build(BuildContext context) {
-    return IntroSlider(
-      key: UniqueKey(),
-      listContentConfig: listContentConfig,
-      onDonePress: _onDonePress,
+    ButtonStyle buttonStyle = ButtonStyle(
+      shape: MaterialStateProperty.all<OutlinedBorder>(const StadiumBorder()),
+      backgroundColor: MaterialStateProperty.all<Color>(
+          Theme.of(context).primaryColor.withAlpha(64)),
+      overlayColor: MaterialStateProperty.all<Color>(
+          Theme.of(context).primaryColor.withAlpha(64)),
     );
+
+    return IntroSlider(
+        key: UniqueKey(),
+        listContentConfig: listContentConfig,
+        onDonePress: _onDonePress,
+        indicatorConfig: IndicatorConfig(
+            colorIndicator: Theme.of(context).primaryColor,
+            typeIndicatorAnimation: TypeIndicatorAnimation.sizeTransition),
+        skipButtonStyle: buttonStyle,
+        nextButtonStyle: buttonStyle,
+        doneButtonStyle: buttonStyle,
+        renderSkipBtn: const Icon(Icons.skip_next_outlined),
+        renderNextBtn: const Icon(Icons.navigate_next));
   }
 }
 

@@ -1,76 +1,105 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 // const MyHomePage(title: 'Flutter Demo Home Page'),
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+enum FormType { number, multiline, text, radio, checkbox, submit }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+class FormConfig<T> {
+  final FormType type;
+  final String name;
+  T value;
+  final String label;
+  final String hint;
+  FormConfig(this.type, this.name, this.value, this.label, [this.hint = ""]);
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final configs = [
+    FormConfig(FormType.text, "name", "", "Enter name"),
+    FormConfig(FormType.submit, "done", false, "Submit")
+  ];
+
+  handleSubmit() {
+    final map = Map<String, dynamic>.fromEntries(
+        configs.map((e) => MapEntry<String, dynamic>(e.name, e.value)));
+    log(map.toString());
+  }
+
+  Widget renderText(FormFieldState<FormConfig> state) {
+    final config = state.value;
+    if (config == null) return const Text("...");
+    String value = config.value;
+    return Column(children: [
+      TextFormField(
+          initialValue: value,
+          onSaved: (value) => {config.value = value},
+          onChanged: (value) => {config.value = value},
+          decoration:
+              InputDecoration(labelText: config.label, hintText: config.hint))
+    ]);
+  }
+
+  Widget renderSubmit(FormFieldState<FormConfig> state) {
+    final config = state.value;
+    disableOthers(FormConfig element) {
+      if (element.type == FormType.submit) {
+        element.value = false;
+      }
+    }
+
+    if (config == null) return const Text("...");
+    return Column(children: [
+      ElevatedButton(
+          onPressed: () {
+            configs.forEach(disableOthers);
+            config.value = true;
+            Form.of(context)?.save();
+            handleSubmit();
+          },
+          child: Text(config.label))
+    ]);
+  }
+
+  FormField<FormConfig> getFormField(FormConfig config) {
+    switch (config.type) {
+      case FormType.text:
+        return FormField<FormConfig>(builder: renderText, initialValue: config);
+      case FormType.submit:
+        return FormField<FormConfig>(
+            builder: renderSubmit, initialValue: config);
+      case FormType.checkbox:
+      case FormType.number:
+      case FormType.multiline:
+      case FormType.radio:
+        throw UnimplementedError("Not yet implemented");
+    }
+  }
+
+  Widget renderField(FormConfig config) {
+    return Padding(
+        padding: const EdgeInsets.all(10.0), child: getFormField(config));
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        body: Form(
+            key: _formKey,
+            child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                child: Column(children: configs.map(renderField).toList()))));
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key, required this.title});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -84,5 +113,5 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
