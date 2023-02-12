@@ -1,53 +1,66 @@
+import 'package:cost_estimator/components/theme.dart';
 import 'package:intro_slider/intro_slider.dart';
 import 'package:flutter/material.dart';
+
+class IntroImage extends StatelessWidget {
+  final String src;
+  const IntroImage(this.src, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Image.asset(
+      src,
+      width: 250,
+      height: 250,
+      fit: BoxFit.scaleDown,
+    ));
+  }
+}
 
 class IntroScreenDefaultState extends State<IntroScreen> {
   List<ContentConfig> listContentConfig = [];
   @override
   void initState() {
     super.initState();
-    const TextStyle headerStyles = TextStyle(
-        color: Colors.black87, fontSize: 30, fontWeight: FontWeight.bold);
-    const TextStyle descriptionStyles = TextStyle(
-        color: Colors.black45, fontSize: 18, fontWeight: FontWeight.normal);
 
     listContentConfig.add(
       const ContentConfig(
-        title: "GET BUILDING COSTS",
-        styleTitle: headerStyles,
-        textOverFlowTitle: null,
-        styleDescription: descriptionStyles,
+        title: "Estimate building costs",
+        maxLineTitle: 3,
+        styleTitle: GlobalTheme.h1,
+        styleDescription: GlobalTheme.description,
         description:
             "Get accurate estimation of the resources needed to complete your project",
-        pathImage: "assets/images/budget_and_finance.jpg",
-        foregroundImageFit: BoxFit.cover,
-        backgroundColor: Color(0xFFFFFFFF),
+        centerWidget: IntroImage("assets/images/budget_and_finance.jpg"),
+        backgroundColor: GlobalTheme.splashBackground,
       ),
     );
     listContentConfig.add(
       const ContentConfig(
-        title: "MAKE YOUR PLANS WITH INSIGHTS",
-        styleTitle: headerStyles,
-        styleDescription: descriptionStyles,
+        title: "Gain insights to budget wisely",
+        maxLineTitle: 3,
+        styleTitle: GlobalTheme.h1,
+        styleDescription: GlobalTheme.description,
         description: "Use insights gained to plan correctly and reduce costs",
-        pathImage: "assets/images/save_money_piggy.jpg",
-        backgroundColor: Color(0xFFFFFFFF),
+        centerWidget: IntroImage("assets/images/save_money_piggy.jpg"),
+        backgroundColor: GlobalTheme.splashBackground,
       ),
     );
     listContentConfig.add(
       const ContentConfig(
-        title: "SPEED UP THE BUILDING PROCESS",
-        styleTitle: headerStyles,
-        styleDescription: descriptionStyles,
-        description: "Spend less time designing and begin work faster",
-        pathImage: "assets/images/work_icon.jpg",
-        backgroundColor: Color(0xFFFFFFFF),
+        title: "Accelerate the time to work",
+        maxLineTitle: 3,
+        styleTitle: GlobalTheme.h1,
+        styleDescription: GlobalTheme.description,
+        description: "Spend less time designing and start work faster",
+        centerWidget: IntroImage("assets/images/work_icon.jpg"),
+        backgroundColor: GlobalTheme.splashBackground,
       ),
     );
   }
 
   _onDonePress() {
-    Navigator.of(context).pushNamed('/home');
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   @override
