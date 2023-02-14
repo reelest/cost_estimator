@@ -1,10 +1,14 @@
+import 'package:cost_estimator/logic/housing_cost.dart';
 import 'package:flutter/material.dart';
 
 enum FieldType { number, decimal, multiline, text, radio, checkbox, submit }
 
 class FieldConfig<T> {
+  static const fieldValueMax = "--max";
+  static const fieldValueMin = "--min";
+
   final FieldType type;
-  final String name;
+  final CostVariable name;
   T? value;
   final String label;
   final String hint;
@@ -38,19 +42,19 @@ List<FieldConfig> defaultFields({lengthUnit = "ft"}) {
   return [
     FieldConfig<double>(
         FieldType.decimal,
-        "mainFloorLength",
+        CostVariable.mainFloorLength,
         0,
         length("Main floor length"),
         "Enter the length in $lengthUnit of the main floor. The living area does not include garage, porches or decks."),
     FieldConfig<double>(
         FieldType.decimal,
-        "mainFloorBreadth",
+        CostVariable.mainFloorBreadth,
         0,
         length("Main floor breadth"),
         "Enter the breadth in $lengthUnit of the main floor. The living area does not include garage, porches or decks."),
     FieldConfig<double>(
         FieldType.radio,
-        "ceilingHeight",
+        CostVariable.ceilingHeight,
         11,
         length("Ceiling height"),
         "Select the height of the main floor of the building.", {
@@ -62,30 +66,30 @@ List<FieldConfig> defaultFields({lengthUnit = "ft"}) {
     }),
     FieldConfig<int>(
         FieldType.number,
-        "numberOfFloors",
+        CostVariable.numberOfFloors,
         null,
         "Number of floors",
         "Enter the number of floors or the number of storeys the building has excluding the main ground floor."),
     FieldConfig<int>(
         FieldType.number,
-        "numberOfKitchens",
+        CostVariable.numberOfKitchens,
         null,
         "Number of kitchens",
         "Enter the number of kitchens the house will contain."),
     FieldConfig<int>(
         FieldType.number,
-        "numberOfStandaloneToilets",
+        CostVariable.numberOfStandaloneToilets,
         null,
         "Number of standalone toilets",
         "Enter the number of toilets without bathroom elements inside."),
     FieldConfig<int>(
         FieldType.number,
-        "numberOfFullBathrooms",
+        CostVariable.numberOfFullBathrooms,
         null,
         "Number of floors",
         "A full bathroom will have a tub/shower, sink and toilet."),
-    FieldConfig<int>(FieldType.number, "numberOfRooms", null, "Number of rooms",
-        "Enter the number of rooms in the house."),
-    FieldConfig(FieldType.submit, "done", false, "Submit")
+    FieldConfig<int>(FieldType.number, CostVariable.numberOfRooms, null,
+        "Number of rooms", "Enter the number of rooms in the house."),
+    FieldConfig(FieldType.submit, CostVariable.done, false, "Submit")
   ];
 }
