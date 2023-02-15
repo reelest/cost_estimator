@@ -5,36 +5,46 @@ import 'fields.dart';
 class _HomeScreenState extends State<HomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final configs = defaultFields();
-  bool dialogShown = false;
+  // TODO: find a way to store wrong values since FieldConfig.value is typed
 
   handleSubmit() {
-    setState(() {
-      dialogShown = true;
-    });
+    showDialog(context: context, builder: renderResult);
   }
 
-  Widget renderResult() {
-    final map = Map<CostVariable, dynamic>.fromEntries(
-        configs.map((e) => MapEntry<CostVariable, dynamic>(e.name, e.value)));
+  Widget renderResult(BuildContext context) {
+    final map = CostInfoMap.fromEntries(configs.map((e) =>
+        MapEntry<CostVariable, double>(
+            e.name, e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0)));
 
     return Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text("The estimated total cost is (in naira)",
-                style: Theme.of(context).textTheme.headlineSmall),
-            Text(
-              getHousingCost({...map}).toStringAsFixed(2),
-              style: Theme.of(context).textTheme.headlineLarge,
+        constraints: BoxConstraints.loose(const Size.fromHeight(300)),
+        child: AlertDialog(
+          content: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("The estimated total cost is (in naira)",
+                    style: Theme.of(context).textTheme.headlineSmall),
+                Padding(
+                  padding: const EdgeInsets.only(top: 32, bottom: 16),
+                  child: Text(
+                    getHousingCost({...map}).toStringAsFixed(2),
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                ),
+              ],
             ),
-            Padding(
-                padding: const EdgeInsets.only(top: 32),
-                child: TextButton(
-                    child: const Text("View exlanation"),
-                    onPressed: () {
-                      // TODO
-                    }))
+          ),
+          actions: [
+            TextButton(
+                child: const Text("View explanation"),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/detail', arguments: map);
+                })
           ],
+          actionsPadding: const EdgeInsets.all(8),
+          actionsAlignment: MainAxisAlignment.center,
         ));
   }
 
@@ -52,17 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget renderText(FormFieldState<FieldConfig> state) {
+  Widget renderTextInput(FormFieldState<FieldConfig> state) {
     final config = state.value;
-    if (config == null) return const Text("...");
-    String? value = config.value == null ? null : '${config.value}';
-    dynamic cast(String? value) {
+    if (config == null) return const SizedBox.shrink();
+
+    dynamic cast(String? value, [noValidate = true]) {
       value ??= '';
       switch (config.type) {
         case FieldType.number:
-          return int.tryParse(value) ?? 0;
+          return noValidate ? int.tryParse(value) ?? 0 : int.parse(value);
         case FieldType.decimal:
-          return double.tryParse(value) ?? 0.0;
+          return noValidate
+              ? double.tryParse(value) ?? 0.0
+              : double.parse(value);
         default:
           return value;
       }
@@ -70,22 +82,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Column(children: [
       TextFormField(
-          initialValue: value,
+          initialValue: config.value == null ? null : '${config.value}',
           keyboardType: config.getTextInputType(),
           maxLines: config.type == FieldType.multiline ? 5 : 1,
           validator: (value) {
-            var max = config.options?[FieldConfig.fieldValueMax];
-            if (max != null && cast(value) > max) {
+            final max = config.options?[FieldConfig.fieldValueMax];
+            final num result;
+            try {
+              result = cast(value, false);
+            } catch (e) {
+              return "Invalid value supplied";
+            }
+            if (max != null && result > max) {
               return "Value must not exceed $max";
             }
             var min = config.options?[FieldConfig.fieldValueMin];
-            if (min != null && cast(value) > min) {
+            if (min != null && result > min) {
               return "Value must not be less than $min";
             }
             return null;
           },
           onSaved: (value) => {config.value = cast(value)},
-          onChanged: (value) => {config.value = cast(value)},
+          onChanged: (value) {
+            state.validate();
+            config.value = cast(value);
+          },
           decoration: InputDecoration(labelText: config.label)),
       renderHintText(config.hint)
     ]);
@@ -102,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
         groupValue: config.value,
         title: Text(e.key),
         onChanged: (value) {
-          config.value = value;
+          if (value != null) config.value = value;
           state.didChange(config);
         },
       );
@@ -140,10 +161,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(children: [
       ElevatedButton(
           onPressed: () {
+            FormState form = _formKey.currentState!;
             configs.forEach(disableOthers);
             config.value = true;
-            Form.of(context)?.save();
-            handleSubmit();
+            if (form.validate()) {
+              form.save();
+              handleSubmit();
+            }
           },
           child: Text(config.label))
     ]);
@@ -157,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
         case FieldType.number:
         case FieldType.decimal:
           return FormField<FieldConfig>(
-              builder: renderText, initialValue: config);
+              builder: renderTextInput, initialValue: config);
         case FieldType.radio:
           return FormField<FieldConfig>(
               builder: renderRadio, initialValue: config);
@@ -188,12 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
           primary: true,
           padding:
               const EdgeInsets.only(bottom: 24, left: 24, right: 24, top: 8),
-          children: [
-            ...configs.map<Widget>(renderField).toList(),
-            dialogShown
-                ? AlertDialog(content: renderResult())
-                : const SizedBox.shrink()
-          ],
+          children: [...configs.map<Widget>(renderField).toList()],
         ),
       ),
     );
@@ -202,15 +221,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 

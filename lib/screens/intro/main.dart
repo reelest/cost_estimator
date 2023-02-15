@@ -60,7 +60,7 @@ class IntroScreenDefaultState extends State<IntroScreen> {
   }
 
   _onDonePress() {
-    Navigator.of(context).pushReplacementNamed('/home');
+    Navigator.of(context).pushReplacementNamed('/form');
   }
 
   @override
@@ -77,6 +77,7 @@ class IntroScreenDefaultState extends State<IntroScreen> {
         key: UniqueKey(),
         listContentConfig: listContentConfig,
         onDonePress: _onDonePress,
+        onSkipPress: _onDonePress,
         indicatorConfig: IndicatorConfig(
             colorIndicator: Theme.of(context).primaryColor,
             typeIndicatorAnimation: TypeIndicatorAnimation.sizeTransition),

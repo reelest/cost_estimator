@@ -9,7 +9,7 @@ class FieldConfig<T> {
 
   final FieldType type;
   final CostVariable name;
-  T? value;
+  T value;
   final String label;
   final String hint;
   final Map<String, T>? options;
@@ -21,8 +21,9 @@ class FieldConfig<T> {
       case FieldType.text:
         return TextInputType.text;
       case FieldType.number:
-      case FieldType.decimal:
         return TextInputType.number;
+      case FieldType.decimal:
+        return const TextInputType.numberWithOptions(decimal: true);
       case FieldType.multiline:
         return TextInputType.multiline;
       case FieldType.radio:
@@ -42,19 +43,19 @@ List<FieldConfig> defaultFields({lengthUnit = "ft"}) {
   return [
     FieldConfig<double>(
         FieldType.decimal,
-        CostVariable.mainFloorLength,
+        CostVariable.mainFloorLengthInFt,
         0,
         length("Main floor length"),
         "Enter the length in $lengthUnit of the main floor. The living area does not include garage, porches or decks."),
     FieldConfig<double>(
         FieldType.decimal,
-        CostVariable.mainFloorBreadth,
+        CostVariable.mainFloorBreadthInFt,
         0,
         length("Main floor breadth"),
         "Enter the breadth in $lengthUnit of the main floor. The living area does not include garage, porches or decks."),
     FieldConfig<double>(
         FieldType.radio,
-        CostVariable.ceilingHeight,
+        CostVariable.ceilingHeightInFt,
         11,
         length("Ceiling height"),
         "Select the height of the main floor of the building.", {
@@ -67,28 +68,28 @@ List<FieldConfig> defaultFields({lengthUnit = "ft"}) {
     FieldConfig<int>(
         FieldType.number,
         CostVariable.numberOfFloors,
-        null,
+        0,
         "Number of floors",
         "Enter the number of floors or the number of storeys the building has excluding the main ground floor."),
     FieldConfig<int>(
         FieldType.number,
         CostVariable.numberOfKitchens,
-        null,
+        0,
         "Number of kitchens",
         "Enter the number of kitchens the house will contain."),
     FieldConfig<int>(
         FieldType.number,
         CostVariable.numberOfStandaloneToilets,
-        null,
+        0,
         "Number of standalone toilets",
         "Enter the number of toilets without bathroom elements inside."),
     FieldConfig<int>(
         FieldType.number,
         CostVariable.numberOfFullBathrooms,
-        null,
+        0,
         "Number of floors",
         "A full bathroom will have a tub/shower, sink and toilet."),
-    FieldConfig<int>(FieldType.number, CostVariable.numberOfRooms, null,
+    FieldConfig<int>(FieldType.number, CostVariable.numberOfRooms, 0,
         "Number of rooms", "Enter the number of rooms in the house."),
     FieldConfig(FieldType.submit, CostVariable.done, false, "Submit")
   ];

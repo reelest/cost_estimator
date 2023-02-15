@@ -1,7 +1,9 @@
 import 'package:cost_estimator/components/theme.dart';
-import 'package:cost_estimator/screens/home/main.dart';
+import 'package:cost_estimator/screens/form/main.dart';
 import 'package:cost_estimator/screens/intro/main.dart';
 import 'package:flutter/material.dart';
+
+import 'screens/details/main.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +20,9 @@ class MyApp extends StatelessWidget {
         theme: GlobalTheme.themeData,
         routes: <String, WidgetBuilder>{
           '/': (context) => const IntroScreen(title: "Introduction"),
-          '/home': (context) => const HomeScreen(title: "Enter parameters")
+          '/form': (context) => const HomeScreen(title: "Enter parameters"),
+          '/detail': (context) =>
+              const DetailsScreen(title: "Breakdown of Cost")
         });
   }
 }
