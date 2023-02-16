@@ -1,6 +1,7 @@
 /*
   Contains all the styles used by the application.
 */
+import 'package:cost_estimator/components/hooks.dart';
 import 'package:flutter/material.dart';
 
 class GlobalTheme {
@@ -10,25 +11,22 @@ class GlobalTheme {
       color: Colors.black45, fontSize: 18, fontWeight: FontWeight.normal);
 
   static double getWindowPadding(BuildContext context) {
-    final windowWidth = MediaQuery.of(context).size.width;
-    final breakpoint = [400, 800, 1E12].firstWhere((e) => windowWidth < e);
-    return ({400: 32.0, 800: 64.0, 1E12: 128.0})[breakpoint]!;
+    return useBreakpoint({400: 32.0, 800: 64.0, 9999999: 128.0}, context);
   }
 
+  static ButtonStyle getIntroButtonStyle(BuildContext context) => ButtonStyle(
+        shape: MaterialStateProperty.all<OutlinedBorder>(const StadiumBorder()),
+        backgroundColor: MaterialStateProperty.all<Color>(
+            Theme.of(context).primaryColor.withAlpha(64)),
+        overlayColor: MaterialStateProperty.all<Color>(
+            Theme.of(context).primaryColor.withAlpha(64)),
+      );
   // Colors
   static const Color splashBackground = Color.fromARGB(255, 250, 253, 255);
 
   // ThemeData
   static ThemeData themeData = ThemeData(
       // This is the theme of your application.
-      //
-      // Try running your application with "flutter run". You'll see the
-      // application has a blue toolbar. Then, without quitting the app, try
-      // changing the primarySwatch below to Colors.green and then invoke
-      // "hot reload" (press "r" in the console where you ran "flutter run",
-      // or simply save your changes to "hot reload" in a Flutter IDE).
-      // Notice that the counter didn't reset back to zero; the application
-      // is not restarted.
       // primarySwatch: Colors.blue,
       primaryColor: Colors.blue);
 }

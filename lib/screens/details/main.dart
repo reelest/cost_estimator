@@ -27,11 +27,11 @@ class Detail extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(description, style: theme.bodyMedium),
         Expanded(
-          flex: isMobile(context) ? 0 : 1,
+          flex: useMobile(context) ? 0 : 1,
           child: Align(
             alignment: Alignment.bottomRight,
             child: Row(
-              mainAxisAlignment: isMobile(context)
+              mainAxisAlignment: useMobile(context)
                   ? MainAxisAlignment.center
                   : MainAxisAlignment.end,
               mainAxisSize: MainAxisSize.max,
@@ -69,6 +69,9 @@ class Detail extends StatelessWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  //The various details that will be rendered.
+  // On mobile screens, they are rendered in a ListView while on larger screens, they are
+  //   rendered on a GridView.
   List<Widget> renderDetails(CostInfo info) {
     return [
       Detail(
@@ -121,7 +124,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         appBar: AppBar(
           title: const Text("Breakdown of Cost"),
         ),
-        body: (({padding, children}) => isMobile(context)
+        body: (({padding, children}) => useMobile(context)
             ? ListView(padding: padding, children: children)
             : GridView(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

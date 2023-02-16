@@ -33,7 +33,7 @@ The application makes use of a simple slider for introduction showcasing the ben
 
 ### Form Screen
 
-The form collects the various data from the user. The data is stored in a `CostInfoMap`. When <button>Estimate cost</button> is clicked, a modal dialog is created showing the user the estimated cost of building the house. The dialog contains a button to show a breakdown of the results of the calculation was arrived at.
+The form collects the various data from the user. The data is stored in a `CostInfoMap`. When <button>Estimate cost</button> is clicked, a modal dialog is created showing the user the estimated cost of building the house. The dialog contains a button to show a breakdown of the results of the calculation were arrived at.
 
 ### Details Screen
 

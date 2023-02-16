@@ -4,7 +4,7 @@ import 'package:cost_estimator/logic/housing_cost.dart';
 import 'package:flutter/material.dart';
 import 'fields.dart';
 
-class _HomeScreenState extends State<HomeScreen> {
+class _FormScreenState extends State<FormScreen> {
   final _formKey = GlobalKey<FormState>();
   // TODO: find a way to store wrong values since FieldConfig.value is typed
   final configs = defaultFields();
@@ -223,11 +223,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.title});
+class FormScreen extends StatefulWidget {
+  const FormScreen({super.key, required this.title});
 
   final String title;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<FormScreen> createState() => _FormScreenState();
 }

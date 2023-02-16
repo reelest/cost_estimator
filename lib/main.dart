@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         theme: GlobalTheme.themeData,
         routes: <String, WidgetBuilder>{
           '/': (context) => const IntroScreen(title: "Introduction"),
-          '/form': (context) => const HomeScreen(title: "Enter parameters"),
+          '/form': (context) => const FormScreen(title: "Enter parameters"),
           '/detail': (context) =>
               const DetailsScreen(title: "Breakdown of Cost")
         });

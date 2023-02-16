@@ -17,7 +17,7 @@ class IntroImage extends StatelessWidget {
   }
 }
 
-class IntroScreenDefaultState extends State<IntroScreen> {
+class _IntroScreenState extends State<IntroScreen> {
   List<ContentConfig> listContentConfig = [];
   @override
   void initState() {
@@ -65,13 +65,7 @@ class IntroScreenDefaultState extends State<IntroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ButtonStyle buttonStyle = ButtonStyle(
-      shape: MaterialStateProperty.all<OutlinedBorder>(const StadiumBorder()),
-      backgroundColor: MaterialStateProperty.all<Color>(
-          Theme.of(context).primaryColor.withAlpha(64)),
-      overlayColor: MaterialStateProperty.all<Color>(
-          Theme.of(context).primaryColor.withAlpha(64)),
-    );
+    final buttonStyle = GlobalTheme.getIntroButtonStyle(context);
 
     return IntroSlider(
         key: UniqueKey(),
@@ -104,5 +98,5 @@ class IntroScreen extends StatefulWidget {
   final String title;
 
   @override
-  State<IntroScreen> createState() => IntroScreenDefaultState();
+  State<IntroScreen> createState() => _IntroScreenState();
 }
