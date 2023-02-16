@@ -79,6 +79,30 @@ class CostInfo {
           numberOfRooms: data[CostVariable.numberOfRooms]!,
           priceList: priceList);
 
+  double estimateCementBagsNeeded() {
+    return estimateCementBagsNeededForWalls(estimateBlocksNeeded()) +
+        (estimateConcreteNeeded() / concreteFormula["bagsOfCement"]!) *
+            concreteFormula["concreteInM3"]!;
+  }
+
+  double estimateNumDoors() {
+    return estimateNumDoorsD1() + estimateNumDoorsD2() + estimateNumDoorsD3();
+  }
+
+  double estimateNumWindows() {
+    return estimateNumWindowsW1() + estimateNumWindowsW2();
+  }
+
+  double estimateTripsOfSandsNeeded() {
+    return estimateTripsOfSandNeededForWalls(estimateBlocksNeeded()) +
+        (estimateConcreteNeeded() / concreteFormula["tripsOfSand"]!) *
+            concreteFormula["concreteInM3"]!;
+  }
+
+  double estimateSandInTonnesNeeded() {
+    return estimateTripsOfSandsNeeded() * tripOfSandInTonnes;
+  }
+
   double estimateCementBagsNeededForWalls(numBlocks) {
     return (numBlocks / blockFormula["blocks"]) * blockFormula["bagsOfCement"];
   }
