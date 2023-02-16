@@ -7,20 +7,25 @@ const double estimatedHousePlanDensity = 0.5;
 
 const double blockWallArea = 0.225 * 0.45;
 
-double tripOfSandInTonnes =
+const double tripOfSandInTonnes =
     5 /* Trailer Capacity ie 5 tonne trailer */ * 1.24 /* Overload factor */;
 
 double columnSize = inch2m(9) * inch2m(9);
 
 double beamSize = inch2m(9) * inch2m(12);
 
+double concreteSlabThickness = inch2m(4);
+
 // https://structville.com/2017/07/how-to-estimate-the-quantity-of-sand-and-cement-required-for-moulding-blocks.html#:~:text=The%20ideal%20mix%20ratio%20for,1%20bag%20to%2025%20blocks.
 const blockFormula = {"tripsOfSand": 11, "bagsOfCement": 86, "blocks": 3000};
+
+// https://structville.com/2020/03/how-to-build-your-rate-and-quote-for-concrete.html
 const concreteFormula = {
-  "tripsOfSand": 1,
-  "bagsOfCement": 11,
-  "water": 3000,
-  "concrete": 1
+  "tripsOfSand": 1.089 / tripOfSandInTonnes,
+  "bagsOfCement": 7,
+  "graniteInKG": 1461,
+  "waterInLiters": 200,
+  "concreteInM3": 1
 };
 
 const PriceList defaultPriceList = PriceList();
@@ -48,6 +53,7 @@ class CostInfo {
   final double numberOfStandaloneToilets;
   final double numberOfFullBathrooms;
   final double numberOfRooms;
+  final PriceList priceList;
   const CostInfo._(
       {required this.mainFloorLengthInFt,
       required this.mainFloorBreadthInFt,
@@ -56,17 +62,22 @@ class CostInfo {
       required this.numberOfKitchens,
       required this.numberOfStandaloneToilets,
       required this.numberOfFullBathrooms,
-      required this.numberOfRooms});
+      required this.numberOfRooms,
+      required this.priceList});
 
-  static CostInfo from(CostInfoMap data) => CostInfo._(
-      mainFloorLengthInFt: data[CostVariable.mainFloorLengthInFt]!,
-      mainFloorBreadthInFt: data[CostVariable.mainFloorBreadthInFt]!,
-      ceilingHeightInFt: data[CostVariable.ceilingHeightInFt]!,
-      numberOfFloors: 1 + data[CostVariable.numberOfFloors]!,
-      numberOfKitchens: data[CostVariable.numberOfKitchens]!,
-      numberOfStandaloneToilets: data[CostVariable.numberOfStandaloneToilets]!,
-      numberOfFullBathrooms: data[CostVariable.numberOfFullBathrooms]!,
-      numberOfRooms: data[CostVariable.numberOfRooms]!);
+  static CostInfo from(CostInfoMap data,
+          [PriceList priceList = defaultPriceList]) =>
+      CostInfo._(
+          mainFloorLengthInFt: data[CostVariable.mainFloorLengthInFt]!,
+          mainFloorBreadthInFt: data[CostVariable.mainFloorBreadthInFt]!,
+          ceilingHeightInFt: data[CostVariable.ceilingHeightInFt]!,
+          numberOfFloors: 1 + data[CostVariable.numberOfFloors]!,
+          numberOfKitchens: data[CostVariable.numberOfKitchens]!,
+          numberOfStandaloneToilets:
+              data[CostVariable.numberOfStandaloneToilets]!,
+          numberOfFullBathrooms: data[CostVariable.numberOfFullBathrooms]!,
+          numberOfRooms: data[CostVariable.numberOfRooms]!,
+          priceList: priceList);
 
   double estimateCementBagsNeededForWalls(numBlocks) {
     return (numBlocks / blockFormula["blocks"]) * blockFormula["bagsOfCement"];
@@ -91,29 +102,55 @@ class CostInfo {
     return estimateTotalWallLength();
   }
 
-  // double estimatePricePerConcreteInM3(){
-  //   return
-  // }
-
-  // double estimateConcreteNeeded() {
-  //   const volumeOfConcrete =
-  //       estimateNumberOfColumns() * ft2m(ceilingHeightInFt) * columnSize +
-  //           estimateTotalBeamLength() * beamSize;
-  //   return volumeOfConcrete * estimatePricePerConcreteInM3()
-  // }
-
-  double estimateCost([PriceList prices = defaultPriceList]) {
-    double numBlocks = estimateBlocksNeeded();
-
-    double costOfBlocksWalls =
-        estimateCementBagsNeededForWalls(numBlocks) * prices.bagOfCement +
-            estimateTripsOfSandNeededForWalls(numBlocks) * prices.tripOfSand;
-
-    double cost = costOfBlocksWalls;
-    return cost;
+  double estimatePricePerConcreteInM3() {
+    return (concreteFormula["tripsOfSand"]! * priceList.tripOfSand +
+            concreteFormula["waterInLiters"]! * priceList.waterInM3 +
+            concreteFormula["graniteInKG"]! * priceList.graniteInKG +
+            concreteFormula["bagsOfCement"]! * priceList.bagOfCement) /
+        concreteFormula["concreteInM3"]!;
   }
 
-  double getAverageLength() {
+  double estimateConcreteNeeded() {
+    return estimateNumberOfColumns() * ft2m(ceilingHeightInFt) * columnSize +
+        estimateTotalBeamLength() * beamSize +
+        estimateVolumeOfSlabNeeded();
+  }
+
+  double estimateVolumeOfSlabNeeded() {
+    return ft2m(mainFloorLengthInFt) *
+        ft2m(mainFloorBreadthInFt) *
+        concreteSlabThickness;
+  }
+
+  double estimateSteelNeeded() {
+    const estimationFactor = 0.01;
+    return estimationFactor * estimateConcreteNeeded();
+  }
+
+  double estimateTilingNeeded() {
+    const estimationFactor = 0.05;
+    return (1 - (estimationFactor * numberOfRooms)) *
+        ft2m(mainFloorLengthInFt) *
+        ft2m(mainFloorBreadthInFt);
+  }
+
+  double estimateCost() {
+    double numBlocks = estimateBlocksNeeded();
+
+    double costOfBlocksForWalls =
+        estimateCementBagsNeededForWalls(numBlocks) * priceList.bagOfCement +
+            estimateTripsOfSandNeededForWalls(numBlocks) * priceList.tripOfSand;
+
+    double volumeOfConcrete = estimateConcreteNeeded();
+    double costOfConcrete = volumeOfConcrete * estimatePricePerConcreteInM3();
+
+    double costOfSteel = priceList.steelPerM3 * estimateSteelNeeded();
+
+    double costOfTiles = priceList.tilesPerM2 * estimateTilingNeeded();
+    return costOfBlocksForWalls + costOfConcrete + costOfSteel + costOfTiles;
+  }
+
+  double getMeanLengthOfSide() {
     return 0.5 * (mainFloorLengthInFt + mainFloorBreadthInFt);
   }
 
@@ -139,7 +176,7 @@ class CostInfo {
   }
 
   double estimateHangingWallLength() {
-    return getAverageLength();
+    return getMeanLengthOfSide();
   }
 
   double estimateTotalAreaOfWindows() {
@@ -148,7 +185,7 @@ class CostInfo {
   }
 
   double estimateNumWindowsW1() {
-    return (2 + numberOfRooms * 2.5) * getAverageLength() / 40;
+    return (2 + numberOfRooms * 2.5) * getMeanLengthOfSide() / 40;
   }
 
   double estimateNumWindowsW2() {
@@ -176,7 +213,7 @@ class CostInfo {
   }
 
   double estimateTotalWallLength() {
-    final avgWallLength = getAverageLength();
+    final avgWallLength = getMeanLengthOfSide();
 
     return (
         //Exterior walls on each floor
@@ -196,7 +233,7 @@ class CostInfo {
   double estimateOtherWallsLength() {
     const estimationFactor = 0.4;
     return estimationFactor *
-        getAverageLength() *
+        getMeanLengthOfSide() *
         numberOfRooms *
         numberOfFloors;
   }
@@ -208,7 +245,7 @@ class CostInfo {
                 (estimatedHousePlanDensity * numberOfRooms +
                     numberOfFullBathrooms) *
                 estimationFactor) *
-            getAverageLength() *
+            getMeanLengthOfSide() *
             numberOfFloors
         : 0;
   }
@@ -220,7 +257,7 @@ class CostInfo {
                 (estimatedHousePlanDensity * numberOfRooms +
                     numberOfStandaloneToilets) *
                 estimationFactor) *
-            getAverageLength() *
+            getMeanLengthOfSide() *
             numberOfFloors
         : 0;
   }
@@ -231,7 +268,7 @@ class CostInfo {
         ? (numberOfKitchens /
                 (estimatedHousePlanDensity * numberOfRooms + numberOfKitchens) *
                 estimationFactor) *
-            getAverageLength() *
+            getMeanLengthOfSide() *
             numberOfFloors
         : 0;
   }
@@ -240,7 +277,7 @@ class CostInfo {
     const estimationFactor = 0.7;
     return numberOfRooms *
         estimationFactor *
-        getAverageLength() *
+        getMeanLengthOfSide() *
         numberOfFloors;
   }
 }

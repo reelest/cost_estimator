@@ -9,6 +9,12 @@ class GlobalTheme {
   static const TextStyle description = TextStyle(
       color: Colors.black45, fontSize: 18, fontWeight: FontWeight.normal);
 
+  static double getWindowPadding(BuildContext context) {
+    final windowWidth = MediaQuery.of(context).size.width;
+    final breakpoint = [400, 800, 1E12].firstWhere((e) => windowWidth < e);
+    return ({400: 32.0, 800: 64.0, 1E12: 128.0})[breakpoint]!;
+  }
+
   // Colors
   static const Color splashBackground = Color.fromARGB(255, 250, 253, 255);
 

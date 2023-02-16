@@ -1,3 +1,4 @@
+import 'package:cost_estimator/components/theme.dart';
 import 'package:cost_estimator/logic/housing_cost.dart';
 import 'package:flutter/material.dart';
 import 'fields.dart';
@@ -199,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final padding = GlobalTheme.getWindowPadding(context);
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -210,8 +212,8 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _formKey,
         child: ListView(
           primary: true,
-          padding:
-              const EdgeInsets.only(bottom: 24, left: 24, right: 24, top: 8),
+          padding: EdgeInsets.only(
+              bottom: 24, left: padding, right: padding, top: 8),
           children: [...configs.map<Widget>(renderField).toList()],
         ),
       ),
