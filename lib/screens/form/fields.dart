@@ -91,6 +91,6 @@ List<FieldConfig> defaultFields({lengthUnit = "ft"}) {
         "A full bathroom will have a tub/shower, sink and toilet."),
     FieldConfig<int>(FieldType.number, CostVariable.numberOfRooms, 0,
         "Number of rooms", "Enter the number of rooms in the house."),
-    FieldConfig(FieldType.submit, CostVariable.done, false, "Submit")
+    FieldConfig(FieldType.submit, CostVariable.done, false, "Estimate cost")
   ];
 }

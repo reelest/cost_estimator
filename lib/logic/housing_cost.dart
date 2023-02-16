@@ -1,32 +1,7 @@
 import 'dart:math';
 
+import 'package:cost_estimator/logic/formulas.dart';
 import 'package:cost_estimator/logic/price_list.dart';
-
-//A way to estimate how much walls are shared between rooms and other enclosed spaces
-const double estimatedHousePlanDensity = 0.5;
-
-const double blockWallArea = 0.225 * 0.45;
-
-const double tripOfSandInTonnes =
-    5 /* Trailer Capacity ie 5 tonne trailer */ * 1.24 /* Overload factor */;
-
-double columnSize = inch2m(9) * inch2m(9);
-
-double beamSize = inch2m(9) * inch2m(12);
-
-double concreteSlabThickness = inch2m(4);
-
-// https://structville.com/2017/07/how-to-estimate-the-quantity-of-sand-and-cement-required-for-moulding-blocks.html#:~:text=The%20ideal%20mix%20ratio%20for,1%20bag%20to%2025%20blocks.
-const blockFormula = {"tripsOfSand": 11, "bagsOfCement": 86, "blocks": 3000};
-
-// https://structville.com/2020/03/how-to-build-your-rate-and-quote-for-concrete.html
-const concreteFormula = {
-  "tripsOfSand": 1.089 / tripOfSandInTonnes,
-  "bagsOfCement": 7,
-  "graniteInKG": 1461,
-  "waterInLiters": 200,
-  "concreteInM3": 1
-};
 
 const PriceList defaultPriceList = PriceList();
 
@@ -79,10 +54,109 @@ class CostInfo {
           numberOfRooms: data[CostVariable.numberOfRooms]!,
           priceList: priceList);
 
+  double estimateCost() {
+    double numBlocks = estimateBlocksNeeded();
+
+    double costOfBlocksForWalls =
+        estimateCementBagsNeededForWalls(numBlocks) * priceList.bagOfCement +
+            estimateTripsOfSandNeededForWalls(numBlocks) * priceList.tripOfSand;
+
+    double volumeOfConcrete = estimateConcreteNeeded();
+    double costOfConcrete = volumeOfConcrete * estimatePricePerConcreteInM3();
+
+    double costOfSteel = priceList.steelPerM3 * estimateSteelNeeded();
+
+    double costOfTiles = priceList.tilesPerM2 * estimateTilingNeeded();
+
+    double costOfRoofing = estimateCostOfRoofing();
+
+    return costOfBlocksForWalls +
+        costOfConcrete +
+        costOfSteel +
+        costOfTiles +
+        costOfRoofing;
+  }
+
+  double estimateCostOfRoofing() {
+    return getMeanLengthOfSide() / 71 * priceList.costOfRoofHalfPlot;
+  }
+
+  double debug() {
+    final cementBagsNeeded = estimateCementBagsNeeded();
+
+    final numDoors = estimateNumDoors();
+    final numWindows = estimateNumWindows();
+    final tripsOfSandsNeeded = estimateTripsOfSandsNeeded();
+    final sandInTonnesNeeded = estimateSandInTonnesNeeded();
+    final blocksNeeded = estimateBlocksNeeded();
+    final cementBagsNeededForWalls =
+        estimateCementBagsNeededForWalls(blocksNeeded);
+    final tripsOfSandNeededForWalls =
+        estimateTripsOfSandNeededForWalls(blocksNeeded);
+    final numberOfColumns = estimateNumberOfColumns();
+    final totalBeamLength = estimateTotalBeamLength();
+    final pricePerConcreteInM3 = estimatePricePerConcreteInM3();
+    final concreteNeeded = estimateConcreteNeeded();
+    final volumeOfSlabNeeded = estimateVolumeOfSlabNeeded();
+    final steelNeeded = estimateSteelNeeded();
+    final tilingNeeded = estimateTilingNeeded();
+    final hangingWallLength = estimateHangingWallLength();
+    final totalAreaOfWindows = estimateTotalAreaOfWindows();
+    final numWindowsW1 = estimateNumWindowsW1();
+    final numWindowsW2 = estimateNumWindowsW2();
+    final totalAreaOfDoors = estimateTotalAreaOfDoors();
+    final numDoorsD1 = estimateNumDoorsD1();
+    final numDoorsD2 = estimateNumDoorsD2();
+    final numDoorsD3 = estimateNumDoorsD3();
+    final totalWallLength = estimateTotalWallLength();
+    final otherWallsLength = estimateOtherWallsLength();
+    final bathroomLength = estimateBathroomLength();
+    final toiletLength = estimateToiletLength();
+    final costOfRoofing = estimateCostOfRoofing();
+    final kitchenLength = estimateKitchenLength();
+    final roomLength = estimateRoomLength();
+
+    //! Add debug point here
+    return cementBagsNeeded +
+        numDoors +
+        numWindows +
+        tripsOfSandsNeeded +
+        sandInTonnesNeeded +
+        cementBagsNeededForWalls +
+        tripsOfSandNeededForWalls +
+        numberOfColumns +
+        totalBeamLength +
+        pricePerConcreteInM3 +
+        concreteNeeded +
+        volumeOfSlabNeeded +
+        steelNeeded +
+        tilingNeeded +
+        blocksNeeded +
+        hangingWallLength +
+        totalAreaOfWindows +
+        numWindowsW1 +
+        numWindowsW2 +
+        totalAreaOfDoors +
+        numDoorsD1 +
+        numDoorsD2 +
+        numDoorsD3 +
+        totalWallLength +
+        otherWallsLength +
+        bathroomLength +
+        toiletLength +
+        costOfRoofing +
+        kitchenLength +
+        roomLength;
+  }
+
+  double getMeanLengthOfSide() {
+    return sqrt(mainFloorLengthInFt * mainFloorBreadthInFt);
+  }
+
   double estimateCementBagsNeeded() {
     return estimateCementBagsNeededForWalls(estimateBlocksNeeded()) +
-        (estimateConcreteNeeded() / concreteFormula["bagsOfCement"]!) *
-            concreteFormula["concreteInM3"]!;
+        (estimateConcreteNeeded() / concreteFormula["concreteInM3"]!) *
+            concreteFormula["bagsOfCement"]!;
   }
 
   double estimateNumDoors() {
@@ -95,8 +169,8 @@ class CostInfo {
 
   double estimateTripsOfSandsNeeded() {
     return estimateTripsOfSandNeededForWalls(estimateBlocksNeeded()) +
-        (estimateConcreteNeeded() / concreteFormula["tripsOfSand"]!) *
-            concreteFormula["concreteInM3"]!;
+        (estimateConcreteNeeded() / concreteFormula["concreteInM3"]!) *
+            concreteFormula["tripsOfSand"]!;
   }
 
   double estimateSandInTonnesNeeded() {
@@ -128,8 +202,8 @@ class CostInfo {
 
   double estimatePricePerConcreteInM3() {
     return (concreteFormula["tripsOfSand"]! * priceList.tripOfSand +
-            concreteFormula["waterInLiters"]! * priceList.waterInM3 +
-            concreteFormula["graniteInKG"]! * priceList.graniteInKG +
+            concreteFormula["waterInLiters"]! * priceList.waterInLiters +
+            concreteFormula["graniteInTonnes"]! * priceList.graniteInTonnes +
             concreteFormula["bagsOfCement"]! * priceList.bagOfCement) /
         concreteFormula["concreteInM3"]!;
   }
@@ -156,26 +230,6 @@ class CostInfo {
     return (1 - (estimationFactor * numberOfRooms)) *
         ft2m(mainFloorLengthInFt) *
         ft2m(mainFloorBreadthInFt);
-  }
-
-  double estimateCost() {
-    double numBlocks = estimateBlocksNeeded();
-
-    double costOfBlocksForWalls =
-        estimateCementBagsNeededForWalls(numBlocks) * priceList.bagOfCement +
-            estimateTripsOfSandNeededForWalls(numBlocks) * priceList.tripOfSand;
-
-    double volumeOfConcrete = estimateConcreteNeeded();
-    double costOfConcrete = volumeOfConcrete * estimatePricePerConcreteInM3();
-
-    double costOfSteel = priceList.steelPerM3 * estimateSteelNeeded();
-
-    double costOfTiles = priceList.tilesPerM2 * estimateTilingNeeded();
-    return costOfBlocksForWalls + costOfConcrete + costOfSteel + costOfTiles;
-  }
-
-  double getMeanLengthOfSide() {
-    return 0.5 * (mainFloorLengthInFt + mainFloorBreadthInFt);
   }
 
   double estimateBlocksNeeded() {
@@ -229,7 +283,8 @@ class CostInfo {
 
   double estimateNumDoorsD2() {
     const estimationFactor = 1.5;
-    return estimationFactor * (numberOfRooms + 1);
+    return estimationFactor *
+        (numberOfRooms + max(2, getMeanLengthOfSide() / 30));
   }
 
   double estimateNumDoorsD3() {
@@ -237,11 +292,12 @@ class CostInfo {
   }
 
   double estimateTotalWallLength() {
-    final avgWallLength = getMeanLengthOfSide();
+    final exteriorWallLength =
+        2 * numberOfFloors * (mainFloorLengthInFt + mainFloorBreadthInFt);
 
     return (
         //Exterior walls on each floor
-        (avgWallLength * 4 * numberOfFloors) +
+        exteriorWallLength +
 
             //Estimate bathroom length
             estimateBathroomLength() +
@@ -304,22 +360,6 @@ class CostInfo {
         getMeanLengthOfSide() *
         numberOfFloors;
   }
-}
-
-double m2ft(m) {
-  return m * 3.28;
-}
-
-double ft2m(ft) {
-  return ft / 3.28;
-}
-
-double ft2inch(ft) {
-  return ft * 12;
-}
-
-double inch2m(inch) {
-  return inch * 0.0254;
 }
 
 double getHousingCost(CostInfoMap rawData) {

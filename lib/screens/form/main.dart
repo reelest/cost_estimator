@@ -1,3 +1,4 @@
+import 'package:cost_estimator/components/format_amount.dart';
 import 'package:cost_estimator/components/theme.dart';
 import 'package:cost_estimator/logic/housing_cost.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +6,8 @@ import 'fields.dart';
 
 class _HomeScreenState extends State<HomeScreen> {
   final _formKey = GlobalKey<FormState>();
-  final configs = defaultFields();
   // TODO: find a way to store wrong values since FieldConfig.value is typed
+  final configs = defaultFields();
 
   handleSubmit() {
     showDialog(context: context, builder: renderResult);
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 32, bottom: 16),
                   child: Text(
-                    getHousingCost({...map}).toStringAsFixed(2),
+                    formatAmount(getHousingCost({...map})),
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ),
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
                 child: const Text("View explanation"),
                 onPressed: () {
+                  Navigator.of(context).pop();
                   Navigator.of(context).pushNamed('/detail', arguments: map);
                 })
           ],

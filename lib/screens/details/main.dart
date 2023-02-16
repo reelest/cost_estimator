@@ -1,3 +1,4 @@
+import 'package:cost_estimator/components/format_amount.dart';
 import 'package:cost_estimator/components/theme.dart';
 import 'package:cost_estimator/logic/housing_cost.dart';
 import 'package:cost_estimator/components/hooks.dart';
@@ -25,37 +26,42 @@ class Detail extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(description, style: theme.bodyMedium),
-        Row(
-          mainAxisAlignment: isMobile(context)
-              ? MainAxisAlignment.center
-              : MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 96, maxWidth: 96),
-                child:
-                    Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  Text(
-                    quantity,
-                    style: (level == DetailLevel.summary
-                            ? theme.headlineLarge
-                            : level == DetailLevel.detailed
-                                ? theme.headlineMedium
-                                : theme.headlineSmall)!
-                        .copyWith(color: Theme.of(context).primaryColor),
-                  ),
-                  Text(
-                    unit,
-                    style: theme.bodySmall!.copyWith(
-                      color: const Color.fromARGB(255, 252, 2, 98),
-                    ),
-                  ),
-                ]),
-              ),
+        Expanded(
+          flex: isMobile(context) ? 0 : 1,
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: Row(
+              mainAxisAlignment: isMobile(context)
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          quantity,
+                          style: (level == DetailLevel.summary
+                                  ? theme.headlineLarge
+                                  : level == DetailLevel.detailed
+                                      ? theme.headlineMedium
+                                      : theme.headlineSmall)!
+                              .copyWith(color: Theme.of(context).primaryColor),
+                        ),
+                        Text(
+                          unit,
+                          style: theme.bodySmall!.copyWith(
+                            color: const Color.fromARGB(255, 252, 2, 98),
+                          ),
+                        ),
+                      ]),
+                ),
+              ],
             ),
-          ],
+          ),
         )
       ]),
     );
@@ -63,51 +69,72 @@ class Detail extends StatelessWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  List<Widget> renderDetails(CostInfo info) {
+    return [
+      Detail(
+        description: "The estimated total cost of building is",
+        quantity: formatAmount(info.estimateCost()),
+      ),
+      Detail(
+        description: "The estimated cost of roofing is",
+        quantity: formatAmount(info.estimateCostOfRoofing()),
+      ),
+      Detail(
+        description: "The estimated amount of cement blocks needed is",
+        quantity: "${info.estimateBlocksNeeded().round()}",
+        unit: "blocks",
+      ),
+      Detail(
+        description: "The estimated amount of cement bags needed",
+        quantity: "${info.estimateCementBagsNeeded().round()}",
+        unit: "bags",
+      ),
+      Detail(
+        description: "The estimated amount of sand needed",
+        quantity: "${info.estimateSandInTonnesNeeded().round()}",
+        unit: "tonnes",
+      ),
+      Detail(
+        description: "The estimated amount of steel needed",
+        quantity: info.estimateSteelNeeded().toStringAsFixed(2),
+        unit: "tonnes",
+      ),
+      Detail(
+        description: "The estimated number of doors to be purchased",
+        quantity: "${info.estimateNumDoors().round()}",
+        unit: "doors",
+      ),
+      Detail(
+        description: "The estimated number of windows to be purchased",
+        quantity: "${info.estimateNumWindows().round()}",
+        unit: "windows",
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     CostInfoMap map = ModalRoute.of(context)?.settings.arguments as CostInfoMap;
     CostInfo info = CostInfo.from(map);
+    info.debug();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Breakdown of Cost"),
-      ),
-      body: ListView(
-        padding: EdgeInsets.symmetric(
-            vertical: 32.0, horizontal: GlobalTheme.getWindowPadding(context)),
-        children: [
-          Detail(
-            description: "The estimated total cost of building is",
-            quantity: "N${info.estimateCost().toInt()}",
-            unit: "naira",
-          ),
-          Detail(
-            description: "The estimated amount of cement bags needed",
-            quantity: "N${info.estimateCementBagsNeeded().toInt()}",
-            unit: "bags",
-          ),
-          Detail(
-            description: "The estimated amount of sand needed",
-            quantity: "N${info.estimateSandInTonnesNeeded().toInt()}",
-            unit: "tonnes",
-          ),
-          Detail(
-            description: "The estimated amount of steel needed",
-            quantity: "N${info.estimateSteelNeeded().toInt()}",
-            unit: "tonnes",
-          ),
-          Detail(
-            description: "The estimated number of windows to be purchased",
-            quantity: "${info.estimateNumDoors().toInt()}",
-            unit: "windows",
-          ),
-          Detail(
-            description: "The estimated number of doors to be purchased",
-            quantity: "${info.estimateNumWindows().toInt()}",
-            unit: "doors",
-          ),
-        ],
-      ),
-    );
+        appBar: AppBar(
+          title: const Text("Breakdown of Cost"),
+        ),
+        body: (({padding, children}) => isMobile(context)
+            ? ListView(padding: padding, children: children)
+            : GridView(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisExtent: 150,
+                    crossAxisSpacing: 16),
+                padding: padding,
+                children: children))(
+          padding: EdgeInsets.symmetric(
+              vertical: 32.0,
+              horizontal: GlobalTheme.getWindowPadding(context)),
+          children: renderDetails(info),
+        ));
   }
 }
 
