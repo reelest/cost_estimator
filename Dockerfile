@@ -24,3 +24,5 @@ ENV PATH "$PATH:/home/flutter/bin"
    
 # Run basic check to download Dark SDK
 RUN flutter doctor
+
+# The final step is run locally. We must run a
