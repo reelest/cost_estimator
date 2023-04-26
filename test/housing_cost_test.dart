@@ -1,6 +1,6 @@
 import 'package:cost_estimator/logic/formulas.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cost_estimator/logic/housing_cost.dart';
+import '../gen/housing_cost.dart';
 
 void main() {
   //Tests from https://structville.com/2017/07/how-to-calculate-the-number-of-blocks-required-to-complete-a-3-bedroom-flat.html

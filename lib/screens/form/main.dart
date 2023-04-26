@@ -8,71 +8,80 @@ class _FormScreenState extends State<FormScreen> {
   final _formKey = GlobalKey<FormState>();
   // TODO: find a way to store wrong values since FieldConfig.value is typed
   final configs = defaultFields();
-  bool showResult = false;
-  bool showError = false;
-  CostInfo? info;
+
+  int requestId = 0;
+
   handleSubmit() async {
-    info = CostInfo.from(CostInfoMap.fromEntries(configs.map((e) =>
-        MapEntry<CostVariable, double>(
-            e.name, e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0))));
-    setState(() {
-      showError = false;
-      showResult = false;
-      (() async {
-        try {
-          await info!.estimatesReady;
-          setState(() => showResult = true);
-        } catch (e) {
-          setState(() => showError = true);
-        }
-      })();
-    });
     showDialog(context: context, builder: renderResult);
   }
 
   Widget renderResult(BuildContext context) {
     return Container(
         constraints: BoxConstraints.loose(const Size.fromHeight(300)),
-        child: AlertDialog(
-          content: Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                showError
-                    ? Text(
-                        "Error sending request. Please check your internet connection.",
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(color: Theme.of(context).errorColor))
-                    : Text("The estimated total cost is (in naira)",
-                        style: Theme.of(context).textTheme.headlineSmall),
-                Padding(
-                  padding: const EdgeInsets.only(top: 32, bottom: 16),
-                  child: showResult
+        child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+          CostInfo info = CostInfo.from(CostInfoMap.fromEntries(configs.map(
+              (e) => MapEntry<CostVariable, double>(e.name,
+                  e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0))));
+          final id = ++requestId;
+          bool showResult = false;
+          bool showError = false;
+          (() async {
+            try {
+              await info.estimatesReady;
+              if (id == requestId) {
+                setState(() => showResult = true);
+              }
+            } catch (e) {
+              if (id == requestId) {
+                setState(() => showError = true);
+              }
+            }
+          })();
+          return AlertDialog(
+            content: Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  showError
                       ? Text(
-                          formatAmount(info!.estimateCost()),
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        )
-                      : showError
-                          ? const Text("")
-                          : const CircularProgressIndicator(),
-                ),
-              ],
+                          "Error sending request. Please check your internet connection.",
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(color: Theme.of(context).errorColor))
+                      : Text("The estimated total cost is (in naira)",
+                          style: Theme.of(context).textTheme.headlineSmall),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 32, bottom: 16),
+                    child: showResult
+                        ? Text(
+                            formatAmount(info.estimateCost()),
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          )
+                        : showError
+                            ? const Text("")
+                            : const CircularProgressIndicator(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-                child: const Text("View explanation"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pushNamed('/detail', arguments: info);
-                })
-          ],
-          actionsPadding: const EdgeInsets.all(8),
-          actionsAlignment: MainAxisAlignment.center,
-        ));
+            actions: showResult
+                ? [
+                    TextButton(
+                        child: const Text("View explanation"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context)
+                              .pushNamed('/detail', arguments: info);
+                        })
+                  ]
+                : [],
+            actionsPadding: const EdgeInsets.all(8),
+            actionsAlignment: MainAxisAlignment.center,
+          );
+        }));
   }
 
   Widget renderHintText(String text) {
