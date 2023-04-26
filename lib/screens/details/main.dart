@@ -117,8 +117,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    CostInfoMap map = ModalRoute.of(context)?.settings.arguments as CostInfoMap;
-    CostInfo info = CostInfo.from(map);
+    CostInfo info = ModalRoute.of(context)?.settings.arguments as CostInfo;
     info.debug();
     return Scaffold(
         appBar: AppBar(

@@ -8,16 +8,16 @@ class _FormScreenState extends State<FormScreen> {
   final _formKey = GlobalKey<FormState>();
   // TODO: find a way to store wrong values since FieldConfig.value is typed
   final configs = defaultFields();
-
-  handleSubmit() {
+  CostInfo? info;
+  handleSubmit() async {
+    info = CostInfo.from(CostInfoMap.fromEntries(configs.map((e) =>
+        MapEntry<CostVariable, double>(
+            e.name, e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0))));
+    await info!.estimatesReady;
     showDialog(context: context, builder: renderResult);
   }
 
   Widget renderResult(BuildContext context) {
-    final map = CostInfoMap.fromEntries(configs.map((e) =>
-        MapEntry<CostVariable, double>(
-            e.name, e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0)));
-
     return Container(
         constraints: BoxConstraints.loose(const Size.fromHeight(300)),
         child: AlertDialog(
@@ -31,7 +31,7 @@ class _FormScreenState extends State<FormScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 32, bottom: 16),
                   child: Text(
-                    formatAmount(getHousingCost({...map})),
+                    formatAmount(info!.estimateCost()),
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ),
@@ -43,7 +43,7 @@ class _FormScreenState extends State<FormScreen> {
                 child: const Text("View explanation"),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.of(context).pushNamed('/detail', arguments: map);
+                  Navigator.of(context).pushNamed('/detail', arguments: info);
                 })
           ],
           actionsPadding: const EdgeInsets.all(8),
