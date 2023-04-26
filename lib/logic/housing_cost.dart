@@ -1,7 +1,29 @@
+import 'dart:convert';
+
 import 'package:cost_estimator/logic/price_list.dart';
 import 'package:http/http.dart' as http;
 
 const PriceList defaultPriceList = PriceList();
+
+const outputHeaders = [
+  "estimatedBlocksNeeded",
+  "estimatedCementBagsNeeded",
+  "estimatedConcreteNeeded",
+  "estimatedCost",
+  "estimatedCostOfRoofing",
+  "estimatedNumDoors",
+  "estimatedNumDoorsD1",
+  "estimatedNumDoorsD2",
+  "estimatedNumDoorsD3",
+  "estimatedNumWindows",
+  "estimatedNumWindowsW1",
+  "estimatedNumWindowsW2",
+  "estimatedPricePerConcreteInM3",
+  "estimatedSandInTonnesNeeded",
+  "estimatedVolumeOfSlabNeeded",
+  "estimatedTripsOfSandsNeeded",
+  "estimatedSteelNeeded"
+];
 
 enum CostVariable {
   mainFloorLengthInFt,
@@ -27,16 +49,21 @@ class CostInfo {
   final double numberOfFullBathrooms;
   final double numberOfRooms;
   final PriceList priceList;
-  const CostInfo._(
-      {required this.mainFloorLengthInFt,
-      required this.mainFloorBreadthInFt,
-      required this.ceilingHeightInFt,
-      required this.numberOfFloors,
-      required this.numberOfKitchens,
-      required this.numberOfStandaloneToilets,
-      required this.numberOfFullBathrooms,
-      required this.numberOfRooms,
-      required this.priceList});
+  late final Future<void> estimatesReady;
+  dynamic _data;
+  CostInfo._({
+    required this.mainFloorLengthInFt,
+    required this.mainFloorBreadthInFt,
+    required this.ceilingHeightInFt,
+    required this.numberOfFloors,
+    required this.numberOfKitchens,
+    required this.numberOfStandaloneToilets,
+    required this.numberOfFullBathrooms,
+    required this.numberOfRooms,
+    required this.priceList,
+  }) {
+    estimatesReady = _calculate();
+  }
 
   static CostInfo from(CostInfoMap data,
           [PriceList priceList = defaultPriceList]) =>
@@ -52,33 +79,68 @@ class CostInfo {
           numberOfRooms: data[CostVariable.numberOfRooms]!,
           priceList: priceList);
 
-  double estimateCost() {
-    double numBlocks = estimateBlocksNeeded();
-
-    double costOfBlocksForWalls =
-        estimateCementBagsNeededForWalls(numBlocks) * priceList.bagOfCement +
-            estimateTripsOfSandNeededForWalls(numBlocks) * priceList.tripOfSand;
-
-    double volumeOfConcrete = estimateConcreteNeeded();
-    double costOfConcrete = volumeOfConcrete * estimatePricePerConcreteInM3();
-
-    double costOfSteel = priceList.steelPerM3 * estimateSteelNeeded();
-
-    double costOfTiles = priceList.tilesPerM2 * estimateTilingNeeded();
-
-    double costOfRoofing = estimateCostOfRoofing();
-
-    return costOfBlocksForWalls +
-        costOfConcrete +
-        costOfSteel +
-        costOfTiles +
-        costOfRoofing;
+  Future<void> _calculate() async {
+    var input = <double>[
+      mainFloorLengthInFt,
+      mainFloorBreadthInFt,
+      ceilingHeightInFt,
+      numberOfFloors,
+      numberOfKitchens,
+      numberOfStandaloneToilets,
+      numberOfFullBathrooms,
+      numberOfRooms,
+      priceList.bagOfCement,
+      priceList.tripOfSand,
+      priceList.waterInLiters,
+      priceList.doorD1,
+      priceList.doorD2,
+      priceList.doorD3,
+      priceList.windowW1,
+      priceList.windowW2,
+      priceList.tilesPerM2,
+      priceList.graniteInTonnes,
+      priceList.steelPerM3,
+      priceList.costOfRoofHalfPlot
+    ];
+    final res = await http.post(
+      Uri.parse('https://cost-estimator-backend.onrender.com'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: json.encode(input),
+    );
+    _data = json.decode(res.body);
   }
 
-  double estimateCostOfRoofing() {
-    return getMeanLengthOfSide() / 71 * priceList.costOfRoofHalfPlot;
+  double _getResponse(String name) {
+    if (_data == null) {
+      throw StateError("Request is yet to be completed");
+    }
+    return _data[outputHeaders.indexOf(name)];
   }
 
+  double estimateBlocksNeeded() => _getResponse("estimatedBlocksNeeded");
+  double estimateCementBagsNeeded() =>
+      _getResponse("estimatedCementBagsNeeded");
+  double estimateConcreteNeeded() => _getResponse("estimatedConcreteNeeded");
+  double estimateCost() => _getResponse("estimatedCost");
+  double estimateCostOfRoofing() => _getResponse("estimatedCostOfRoofing");
+  double estimateNumDoors() => _getResponse("estimatedNumDoors");
+  double estimateNumDoorsD1() => _getResponse("estimatedNumDoorsD1");
+  double estimateNumDoorsD2() => _getResponse("estimatedNumDoorsD2");
+  double estimateNumDoorsD3() => _getResponse("estimatedNumDoorsD3");
+  double estimateNumWindows() => _getResponse("estimatedNumWindows");
+  double estimateNumWindowsW1() => _getResponse("estimatedNumWindowsW1");
+  double estimateNumWindowsW2() => _getResponse("estimatedNumWindowsW2");
+  double estimatePricePerConcreteInM3() =>
+      _getResponse("estimatedPricePerConcreteInM3");
+  double estimateSandInTonnesNeeded() =>
+      _getResponse("estimatedSandInTonnesNeeded");
+  double estimateVolumeOfSlabNeeded() =>
+      _getResponse("estimatedVolumeOfSlabNeeded");
+  double estimateTripsOfSandsNeeded() =>
+      _getResponse("estimatedTripsOfSandsNeeded");
+  double estimateSteelNeeded() => _getResponse("estimatedSteelNeeded");
   double debug() {
     final cementBagsNeeded = estimateCementBagsNeeded();
 
@@ -87,32 +149,17 @@ class CostInfo {
     final tripsOfSandsNeeded = estimateTripsOfSandsNeeded();
     final sandInTonnesNeeded = estimateSandInTonnesNeeded();
     final blocksNeeded = estimateBlocksNeeded();
-    final cementBagsNeededForWalls =
-        estimateCementBagsNeededForWalls(blocksNeeded);
-    final tripsOfSandNeededForWalls =
-        estimateTripsOfSandNeededForWalls(blocksNeeded);
-    final numberOfColumns = estimateNumberOfColumns();
-    final totalBeamLength = estimateTotalBeamLength();
     final pricePerConcreteInM3 = estimatePricePerConcreteInM3();
     final concreteNeeded = estimateConcreteNeeded();
     final volumeOfSlabNeeded = estimateVolumeOfSlabNeeded();
     final steelNeeded = estimateSteelNeeded();
-    final tilingNeeded = estimateTilingNeeded();
-    final hangingWallLength = estimateHangingWallLength();
-    final totalAreaOfWindows = estimateTotalAreaOfWindows();
+    // final tilingNeeded = estimateTilingNeeded();
     final numWindowsW1 = estimateNumWindowsW1();
     final numWindowsW2 = estimateNumWindowsW2();
-    final totalAreaOfDoors = estimateTotalAreaOfDoors();
     final numDoorsD1 = estimateNumDoorsD1();
     final numDoorsD2 = estimateNumDoorsD2();
     final numDoorsD3 = estimateNumDoorsD3();
-    final totalWallLength = estimateTotalWallLength();
-    final otherWallsLength = estimateOtherWallsLength();
-    final bathroomLength = estimateBathroomLength();
-    final toiletLength = estimateToiletLength();
     final costOfRoofing = estimateCostOfRoofing();
-    final kitchenLength = estimateKitchenLength();
-    final roomLength = estimateRoomLength();
 
     //! Add debug point here
     return cementBagsNeeded +
@@ -120,243 +167,18 @@ class CostInfo {
         numWindows +
         tripsOfSandsNeeded +
         sandInTonnesNeeded +
-        cementBagsNeededForWalls +
-        tripsOfSandNeededForWalls +
-        numberOfColumns +
-        totalBeamLength +
         pricePerConcreteInM3 +
         concreteNeeded +
         volumeOfSlabNeeded +
         steelNeeded +
-        tilingNeeded +
+        // tilingNeeded +
         blocksNeeded +
-        hangingWallLength +
-        totalAreaOfWindows +
         numWindowsW1 +
         numWindowsW2 +
-        totalAreaOfDoors +
         numDoorsD1 +
         numDoorsD2 +
         numDoorsD3 +
-        totalWallLength +
-        otherWallsLength +
-        bathroomLength +
-        toiletLength +
-        costOfRoofing +
-        kitchenLength +
-        roomLength;
-  }
-
-  double getMeanLengthOfSide() {
-    return sqrt(mainFloorLengthInFt * mainFloorBreadthInFt);
-  }
-
-  double estimateCementBagsNeeded() {
-    return estimateCementBagsNeededForWalls(estimateBlocksNeeded()) +
-        (estimateConcreteNeeded() / concreteFormula["concreteInM3"]!) *
-            concreteFormula["bagsOfCement"]!;
-  }
-
-  double estimateNumDoors() {
-    return estimateNumDoorsD1() + estimateNumDoorsD2() + estimateNumDoorsD3();
-  }
-
-  double estimateNumWindows() {
-    return estimateNumWindowsW1() + estimateNumWindowsW2();
-  }
-
-  double estimateTripsOfSandsNeeded() {
-    return estimateTripsOfSandNeededForWalls(estimateBlocksNeeded()) +
-        (estimateConcreteNeeded() / concreteFormula["concreteInM3"]!) *
-            concreteFormula["tripsOfSand"]!;
-  }
-
-  double estimateSandInTonnesNeeded() {
-    return estimateTripsOfSandsNeeded() * tripOfSandInTonnes;
-  }
-
-  double estimateCementBagsNeededForWalls(numBlocks) {
-    return (numBlocks / blockFormula["blocks"]) * blockFormula["bagsOfCement"];
-  }
-
-  double estimateTripsOfSandNeededForWalls(numBlocks) {
-    return (numBlocks / blockFormula["blocks"]) * blockFormula["tripsOfSand"];
-  }
-
-  double estimateNumberOfColumns() {
-    const estimationFactor = 2;
-    return 4 +
-        (numberOfRooms +
-                numberOfKitchens +
-                numberOfFullBathrooms +
-                numberOfStandaloneToilets +
-                numberOfFloors) *
-            estimationFactor;
-  }
-
-  double estimateTotalBeamLength() {
-    return estimateTotalWallLength();
-  }
-
-  double estimatePricePerConcreteInM3() {
-    return (concreteFormula["tripsOfSand"]! * priceList.tripOfSand +
-            concreteFormula["waterInLiters"]! * priceList.waterInLiters +
-            concreteFormula["graniteInTonnes"]! * priceList.graniteInTonnes +
-            concreteFormula["bagsOfCement"]! * priceList.bagOfCement) /
-        concreteFormula["concreteInM3"]!;
-  }
-
-  double estimateConcreteNeeded() {
-    return estimateNumberOfColumns() * ft2m(ceilingHeightInFt) * columnSize +
-        estimateTotalBeamLength() * beamSize +
-        estimateVolumeOfSlabNeeded();
-  }
-
-  double estimateVolumeOfSlabNeeded() {
-    return ft2m(mainFloorLengthInFt) *
-        ft2m(mainFloorBreadthInFt) *
-        concreteSlabThickness;
-  }
-
-  double estimateSteelNeeded() {
-    const estimationFactor = 0.01;
-    return estimationFactor * estimateConcreteNeeded();
-  }
-
-  double estimateTilingNeeded() {
-    const estimationFactor = 0.05;
-    return (1 - (estimationFactor * numberOfRooms)) *
-        ft2m(mainFloorLengthInFt) *
-        ft2m(mainFloorBreadthInFt);
-  }
-
-  double estimateBlocksNeeded() {
-    final wallLength = ft2m(estimateTotalWallLength());
-    final hangingWallLength = ft2m(estimateHangingWallLength());
-    final ceilingHeightInMeters = ft2m(ceilingHeightInFt);
-    final totalWallAreaFoundationToDPC = 0.9 * numberOfFloors * wallLength;
-    final totalWallAreaDPCToLintelUnadjusted =
-        ceilingHeightInMeters * (wallLength - hangingWallLength);
-    final totalAreaOfDoors = estimateTotalAreaOfDoors();
-    final totalAreaOfWindows = estimateTotalAreaOfWindows();
-    final totalWallAreaDPCToLintel = totalWallAreaDPCToLintelUnadjusted -
-        totalAreaOfDoors -
-        totalAreaOfWindows;
-    final totalWallAreaLintelToOverhead =
-        ceilingHeightInMeters * 0.33 * wallLength;
-
-    final totalWallArea = totalWallAreaFoundationToDPC +
-        totalWallAreaDPCToLintel +
-        totalWallAreaLintelToOverhead;
-    return max(0, totalWallArea / blockWallArea);
-  }
-
-  double estimateHangingWallLength() {
-    return getMeanLengthOfSide();
-  }
-
-  double estimateTotalAreaOfWindows() {
-    return estimateNumWindowsW1() * 1.2 * 1.2 +
-        estimateNumWindowsW2() * 0.6 * 0.6;
-  }
-
-  double estimateNumWindowsW1() {
-    return (2 + numberOfRooms * 2.5) * getMeanLengthOfSide() / 40;
-  }
-
-  double estimateNumWindowsW2() {
-    return numberOfStandaloneToilets + numberOfFullBathrooms;
-  }
-
-  double estimateTotalAreaOfDoors() {
-    var doorHeight = 2.1;
-    return estimateNumDoorsD1() * doorHeight * 1.2 +
-        estimateNumDoorsD2() * doorHeight * 0.9 +
-        estimateNumDoorsD3() * doorHeight * 0.7;
-  }
-
-  double estimateNumDoorsD1() {
-    return numberOfFloors;
-  }
-
-  double estimateNumDoorsD2() {
-    const estimationFactor = 1.5;
-    return estimationFactor *
-        (numberOfRooms + max(2, getMeanLengthOfSide() / 30));
-  }
-
-  double estimateNumDoorsD3() {
-    return numberOfFullBathrooms + numberOfStandaloneToilets;
-  }
-
-  double estimateTotalWallLength() {
-    final exteriorWallLength =
-        2 * numberOfFloors * (mainFloorLengthInFt + mainFloorBreadthInFt);
-
-    return (
-        //Exterior walls on each floor
-        exteriorWallLength +
-
-            //Estimate bathroom length
-            estimateBathroomLength() +
-            //Estimate room length
-            estimateRoomLength() +
-            estimateOtherWallsLength() +
-            //Estimate kitchen length
-            estimateKitchenLength() +
-            //Estimate toilet length
-            estimateToiletLength());
-  }
-
-  double estimateOtherWallsLength() {
-    const estimationFactor = 0.4;
-    return estimationFactor *
-        getMeanLengthOfSide() *
-        numberOfRooms *
-        numberOfFloors;
-  }
-
-  double estimateBathroomLength() {
-    const estimationFactor = 0.95;
-    return numberOfFullBathrooms > 0
-        ? (numberOfFullBathrooms /
-                (estimatedHousePlanDensity * numberOfRooms +
-                    numberOfFullBathrooms) *
-                estimationFactor) *
-            getMeanLengthOfSide() *
-            numberOfFloors
-        : 0;
-  }
-
-  double estimateToiletLength() {
-    const estimationFactor = 0.75;
-    return numberOfStandaloneToilets > 0
-        ? (numberOfStandaloneToilets /
-                (estimatedHousePlanDensity * numberOfRooms +
-                    numberOfStandaloneToilets) *
-                estimationFactor) *
-            getMeanLengthOfSide() *
-            numberOfFloors
-        : 0;
-  }
-
-  double estimateKitchenLength() {
-    const estimationFactor = 0.9;
-    return numberOfKitchens > 0
-        ? (numberOfKitchens /
-                (estimatedHousePlanDensity * numberOfRooms + numberOfKitchens) *
-                estimationFactor) *
-            getMeanLengthOfSide() *
-            numberOfFloors
-        : 0;
-  }
-
-  double estimateRoomLength() {
-    const estimationFactor = 0.7;
-    return numberOfRooms *
-        estimationFactor *
-        getMeanLengthOfSide() *
-        numberOfFloors;
+        costOfRoofing;
   }
 }
 
