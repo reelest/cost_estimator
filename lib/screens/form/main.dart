@@ -8,12 +8,25 @@ class _FormScreenState extends State<FormScreen> {
   final _formKey = GlobalKey<FormState>();
   // TODO: find a way to store wrong values since FieldConfig.value is typed
   final configs = defaultFields();
+  bool showResult = false;
+  bool showError = false;
   CostInfo? info;
   handleSubmit() async {
     info = CostInfo.from(CostInfoMap.fromEntries(configs.map((e) =>
         MapEntry<CostVariable, double>(
             e.name, e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0))));
-    await info!.estimatesReady;
+    setState(() {
+      showError = false;
+      showResult = false;
+      (() async {
+        try {
+          await info!.estimatesReady;
+          setState(() => showResult = true);
+        } catch (e) {
+          setState(() => showError = true);
+        }
+      })();
+    });
     showDialog(context: context, builder: renderResult);
   }
 
@@ -26,14 +39,25 @@ class _FormScreenState extends State<FormScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("The estimated total cost is (in naira)",
-                    style: Theme.of(context).textTheme.headlineSmall),
+                showError
+                    ? Text(
+                        "Error sending request. Please check your internet connection.",
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(color: Theme.of(context).errorColor))
+                    : Text("The estimated total cost is (in naira)",
+                        style: Theme.of(context).textTheme.headlineSmall),
                 Padding(
                   padding: const EdgeInsets.only(top: 32, bottom: 16),
-                  child: Text(
-                    formatAmount(info!.estimateCost()),
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  ),
+                  child: showResult
+                      ? Text(
+                          formatAmount(info!.estimateCost()),
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        )
+                      : showError
+                          ? const Text("")
+                          : const CircularProgressIndicator(),
                 ),
               ],
             ),
