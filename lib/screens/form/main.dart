@@ -10,9 +10,18 @@ class _FormScreenState extends State<FormScreen> {
   final configs = defaultFields();
 
   int requestId = 0;
-
+  CostInfo? info;
+  bool showResult = false;
+  bool showError = false;
   handleSubmit() async {
-    showDialog(context: context, builder: renderResult);
+    info = CostInfo.from(CostInfoMap.fromEntries(configs.map((e) =>
+        MapEntry<CostVariable, double>(
+            e.name, e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0))));
+    setState(() {
+      showResult = false;
+      showError = false;
+      showDialog(context: context, builder: renderResult);
+    });
   }
 
   Widget renderResult(BuildContext context) {
@@ -20,24 +29,21 @@ class _FormScreenState extends State<FormScreen> {
         constraints: BoxConstraints.loose(const Size.fromHeight(300)),
         child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-          CostInfo info = CostInfo.from(CostInfoMap.fromEntries(configs.map(
-              (e) => MapEntry<CostVariable, double>(e.name,
-                  e.type == FieldType.submit ? 0.0 : e.value * 1.0 ?? 0.0))));
-          final id = ++requestId;
-          bool showResult = false;
-          bool showError = false;
-          (() async {
-            try {
-              await info.estimatesReady;
-              if (id == requestId) {
-                setState(() => showResult = true);
+          if (!showError && !showResult) {
+            (() async {
+              final id = ++requestId;
+              try {
+                await info!.estimatesReady;
+                if (id == requestId) {
+                  setState(() => showResult = true);
+                }
+              } catch (e) {
+                if (id == requestId) {
+                  setState(() => showError = true);
+                }
               }
-            } catch (e) {
-              if (id == requestId) {
-                setState(() => showError = true);
-              }
-            }
-          })();
+            })();
+          }
           return AlertDialog(
             content: Container(
               padding: const EdgeInsets.all(16),
@@ -57,7 +63,7 @@ class _FormScreenState extends State<FormScreen> {
                     padding: const EdgeInsets.only(top: 32, bottom: 16),
                     child: showResult
                         ? Text(
-                            formatAmount(info.estimateCost()),
+                            formatAmount(info!.estimateCost()),
                             style: Theme.of(context).textTheme.headlineLarge,
                           )
                         : showError
