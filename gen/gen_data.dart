@@ -5,48 +5,48 @@ import 'package:cost_estimator/logic/price_list.dart';
 
 final _random = Random(1);
 const List<double> min = [
-  25,
-  25,
-  9,
-  1,
   0,
   0,
   0,
   0,
-  4100,
-  28000,
-  5.0,
-  15000,
-  11000,
-  6000,
-  35000,
-  25000,
-  5500,
-  9000 /*cost*/ + 7000 /*transportation*/,
-  1.5 /*convert to tonnes*/ * 170000,
-  800000
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
 ];
 const List<double> max = [
-  525,
-  525,
-  16,
-  10,
-  10,
-  10,
-  10,
-  10,
-  9000,
-  56000,
-  10.0,
-  30000,
-  22000,
-  12000,
-  70000,
-  50000,
-  7500,
-  18000 /*cost*/ + 7000 /*transportation*/,
-  4.5 /*convert to tonnes*/ * 170000,
-  1800000
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000,
+  100000000
 ];
 void main() {
   stdout.write("Generating data....    ");
@@ -55,11 +55,11 @@ void main() {
   writeHeader(file);
 
   List<double> columns = List<double>.filled(37, 0);
-  for (var i = 0; i < 1000; i++) {
+  for (var i = 0; i < 20000; i++) {
     for (var j = 0; j < 20; j++) {
       columns[j] = pick(min[j], max[j]);
     }
-    stdout.write('\b\b\b\b${(1 + i).toString().padLeft(4)}');
+    stdout.write('\b\b\b\b${(1 + i).toString().padLeft(5)}');
     columns.setAll(20, costMapToOutput(inputToCostMap(columns)));
     writeLine(file, columns);
   }
