@@ -4,7 +4,8 @@ import 'package:cost_estimator/logic/price_list.dart';
 import 'package:http/http.dart' as http;
 
 const PriceList defaultPriceList = PriceList();
-
+const apiEndpoint = 'https://cost-estimator-backend.onrender.com';
+// const apiEndpoint = 'http://localhost:5000';
 const outputHeaders = [
   "estimatedBlocksNeeded",
   "estimatedCementBagsNeeded",
@@ -103,7 +104,7 @@ class CostInfo {
       priceList.costOfRoofHalfPlot
     ];
     final res = await http.post(
-      Uri.parse('https://cost-estimator-backend.onrender.com'),
+      Uri.parse(apiEndpoint),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

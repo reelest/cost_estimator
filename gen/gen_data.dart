@@ -5,48 +5,88 @@ import 'package:cost_estimator/logic/price_list.dart';
 
 final _random = Random(1);
 const List<double> min = [
+  // mainFloorLengthInFt
   0,
+  // mainFloorBreadthInFt
   0,
+  // ceilingHeightInFt
+  5,
+  // numberOfFloors
+  1,
+  // numberOfKitchens
   0,
+  // numberOfStandaloneToilets
   0,
+  // numberOfFullBathrooms
   0,
+  // numberOfRooms
   0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0
+  // priceOfBagOfCement
+  0.2 * 4100,
+  // priceOfTripOfSand
+  0.2 * 28000,
+  // priceOfWaterInLiters
+  0.2 * 5.0,
+  // priceOfDoorD1
+  0.2 * 15000,
+  // priceOfDoorD2
+  0.2 * 11000,
+  // priceOfDoorD3
+  0.2 * 6000,
+  // priceOfWindowW1
+  0.2 * 35000,
+  // priceOfWindowW2
+  0.2 * 25000,
+  // priceOfTilesPerM2
+  0.2 * 5500,
+  // priceOfGraniteInTonnes
+  0.2 * 9000 /*cost*/ + 7000 /*transportation*/,
+  // priceOfSteelPerM3
+  0.2 * 1.5 /*convert to tonnes*/ * 170000,
+  // priceOfCostOfRoofHalfPlot
+  0.2 * 800000
 ];
 const List<double> max = [
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000,
-  100000000
+  // mainFloorLengthInFt
+  10000,
+  // mainFloorBreadthInFt
+  10000,
+  // ceilingHeightInFt
+  20,
+  // numberOfFloors
+  30,
+  // numberOfKitchens
+  30,
+  // numberOfStandaloneToilets
+  30,
+  // numberOfFullBathrooms
+  30,
+  // numberOfRooms
+  100,
+  // priceOfBagOfCement
+  5 * 4100,
+  // priceOfTripOfSand
+  5 * 28000,
+  // priceOfWaterInLiters
+  5 * 5.0,
+  // priceOfDoorD1
+  5 * 15000,
+  // priceOfDoorD2
+  5 * 11000,
+  // priceOfDoorD3
+  5 * 6000,
+  // priceOfWindowW1
+  5 * 35000,
+  // priceOfWindowW2
+  5 * 25000,
+  // priceOfTilesPerM2
+  5 * 5500,
+  // priceOfGraniteInTonnes
+  5 * 9000 /*cost*/ + 7000 /*transportation*/,
+  // priceOfSteelPerM3
+  5 * 1.5 /*convert to tonnes*/ * 170000,
+  // priceOfCostOfRoofHalfPlot
+  5 * 800000
 ];
 void main() {
   stdout.write("Generating data....    ");
@@ -59,7 +99,7 @@ void main() {
     for (var j = 0; j < 20; j++) {
       columns[j] = pick(min[j], max[j]);
     }
-    stdout.write('\b\b\b\b${(1 + i).toString().padLeft(5)}');
+    stdout.write('\b\b\b\b\b${(1 + i).toString().padLeft(5)}');
     columns.setAll(20, costMapToOutput(inputToCostMap(columns)));
     writeLine(file, columns);
   }
@@ -117,7 +157,7 @@ void writeLine(IOSink file, List<double> columns) {
 }
 
 double pick(double min, double max) {
-  return (min + _random.nextDouble() * (max - min));
+  return (min + (pow(_random.nextDouble(), 10) * (max - min)));
 }
 
 CostInfo inputToCostMap(List<double> data) {
