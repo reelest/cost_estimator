@@ -1,12 +1,12 @@
 FROM gitpod/workspace-full:2022-05-08-14-31-53
    
 # Prerequisites
-RUN apt update && apt install -y curl git unzip xz-utils zip libglu1-mesa openjdk-11-jdk wget
+RUN sudo apt update && sudo apt install -y curl git unzip xz-utils zip libglu1-mesa openjdk-11-jdk wget
 
-WORKDIR /home/
+WORKDIR /home/gitpod/
    
 # Prepare Android directories and system variables
-ENV ANDROID_SDK_ROOT /home/android-sdk-linux
+ENV ANDROID_SDK_ROOT /home/gitpod/android-sdk-linux
 RUN mkdir -p .android && touch .android/repositories.cfg
    
 # Set up Android SDK
@@ -20,7 +20,7 @@ ENV PATH "$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/cmd
 
 # Download Flutter SDK
 RUN git clone https://github.com/flutter/flutter.git
-ENV PATH "$PATH:/home/flutter/bin"
+ENV PATH "$PATH:/home/gitpod/flutter/bin"
    
 # Run basic check to download Dark SDK
 RUN flutter doctor
