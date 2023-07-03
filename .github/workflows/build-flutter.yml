@@ -32,9 +32,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: aab
-          path: /home/runner/work/cost_estimator/cost_estimator/build/outputs/**/*.aab
+          path: /home/runner/work/cost_estimator/cost_estimator/build/app/outputs/**/*.aab
       - name: Archive apk
         uses: actions/upload-artifact@v3
         with:
           name: apk
-          path: /home/runner/work/cost_estimator/cost_estimator/build/outputs/**/*.apk
+          path: /home/runner/work/cost_estimator/cost_estimator/build/app/outputs/**/*.apk
